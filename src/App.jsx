@@ -4,8 +4,10 @@ import './App.css'
 function App() {
   const [tempo, setTempo] = useState(120)
   const [timeSignature, setTimeSignature] = useState(4)
+  const [measures, setMeasures] = useState(1)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentBeat, setCurrentBeat] = useState(0)
+  const [currentMeasure, setCurrentMeasure] = useState(1)
   
   const intervalRef = useRef(null)
   const audioContextRef = useRef(null)
@@ -39,7 +41,20 @@ function App() {
     intervalRef.current = setInterval(() => {
       setCurrentBeat(prevBeat => {
         const nextBeat = (prevBeat + 1) % timeSignature
-        playClick(prevBeat === timeSignature - 1)
+        
+        // Update measure when we complete a full measure
+        if (prevBeat === timeSignature - 1) {
+          setCurrentMeasure(prevMeasure => prevMeasure + 1)
+        }
+        
+        // Play sound when currentMeasure % measures == 0
+        // For measures=4: play on measures 4, 8, 12, 16...
+        // For measures=1: play on all measures (1, 2, 3, 4...)
+        const shouldPlay = currentMeasure % measures === 0
+        if (shouldPlay) {
+          playClick(prevBeat === timeSignature - 1)
+        }
+        
         return nextBeat
       })
     }, beatInterval)
@@ -51,6 +66,7 @@ function App() {
       intervalRef.current = null
     }
     setCurrentBeat(0)
+    setCurrentMeasure(1)
   }
 
   const toggleMetronome = () => {
@@ -67,7 +83,14 @@ function App() {
       stopMetronome()
       startMetronome()
     }
-  }, [tempo, timeSignature])
+  }, [tempo])
+
+  useEffect(() => {
+    // Stop metronome and reset measure when time signature or measures change
+    stopMetronome()
+    setIsPlaying(false)
+    setCurrentMeasure(1)
+  }, [timeSignature, measures])
 
   useEffect(() => {
     return () => {
@@ -120,6 +143,23 @@ function App() {
             <option value={6}>6/8</option>
             <option value={7}>7/8</option>
           </select>
+        </div>
+        
+        <div className="control-group">
+          <label htmlFor="measures">Measures</label>
+          <input
+            type="number"
+            id="measures"
+            min="1"
+            value={measures}
+            onChange={(e) => {
+              const value = parseInt(e.target.value)
+              if (value > 0) {
+                setMeasures(value)
+              }
+            }}
+          />
+          <span className="value-display">{measures}</span>
         </div>
         
         <div className="control-group">
