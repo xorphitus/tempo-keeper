@@ -23,38 +23,50 @@ function App() {
     const ctx = audioContextRef.current
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
-    
+
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
-    
+
     oscillator.frequency.value = isAccent ? 800 : 400
     gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1)
-    
+
     oscillator.start(ctx.currentTime)
     oscillator.stop(ctx.currentTime + 0.1)
   }
 
+  /**
+   * Determines whether a sound should play based on the measures pattern
+   * @param {number} measures - The N value for the pattern (play 1 measure, mute N-1 measures)
+   * @param {number} currentMeasure - The current measure number (1-indexed)
+   * @returns {boolean} - True if sound should play, false otherwise
+   */
+  const shouldPlay = (measures, currentMeasure) => {
+    // When measures=1, always play
+    // When measures=N, play only when currentMeasure % N === 1
+    // This means: play on measures 1, N+1, 2N+1, 3N+1, etc.
+    return currentMeasure % measures === 1
+  }
+
   const startMetronome = () => {
     const beatInterval = 60000 / tempo
-    
+    let measureCounter = currentMeasure
+
     intervalRef.current = setInterval(() => {
       setCurrentBeat(prevBeat => {
         const nextBeat = (prevBeat + 1) % timeSignature
-        
+
         // Update measure when we complete a full measure
         if (prevBeat === timeSignature - 1) {
-          setCurrentMeasure(prevMeasure => prevMeasure + 1)
+          measureCounter++
+          setCurrentMeasure(measureCounter)
         }
-        
-        // Play sound when currentMeasure % measures == 0
-        // For measures=4: play on measures 4, 8, 12, 16...
-        // For measures=1: play on all measures (1, 2, 3, 4...)
-        const shouldPlay = currentMeasure % measures === 0
-        if (shouldPlay) {
+
+        // Check if sound should play based on the measures pattern
+        if (shouldPlay(measures, measureCounter)) {
           playClick(prevBeat === timeSignature - 1)
         }
-        
+
         return nextBeat
       })
     }, beatInterval)
