@@ -1,6 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const useMetronome = () => {
+interface UseMetronomeReturn {
+  isPlaying: boolean;
+  bpm: number;
+  setBpm: (bpm: number) => void;
+  beatsPerMeasure: number;
+  setBeatsPerMeasure: (beats: number) => void;
+  currentBeat: number;
+  currentMeasure: number;
+  playEveryNMeasures: number;
+  setPlayEveryNMeasures: (n: number) => void;
+  start: () => void;
+  stop: () => void;
+}
+
+const useMetronome = (): UseMetronomeReturn => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
   const [beatsPerMeasure, setBeatsPerMeasure] = useState(4);
@@ -8,24 +22,27 @@ const useMetronome = () => {
   const [currentMeasure, setCurrentMeasure] = useState(1);
   const [playEveryNMeasures, setPlayEveryNMeasures] = useState(1);
 
-  const audioContextRef = useRef(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const nextNoteTimeRef = useRef(0);
-  const timerIdRef = useRef(null);
+  const timerIdRef = useRef<number | null>(null);
   const beatCountRef = useRef(0);
   const measureCountRef = useRef(1);
 
   // Initialize Web Audio API
   useEffect(() => {
-    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (AudioContextClass) {
+      audioContextRef.current = new AudioContextClass();
+    }
     return () => {
       if (audioContextRef.current) {
-        audioContextRef.current.close();
+        void audioContextRef.current.close();
       }
     };
   }, []);
 
   // Play a click sound
-  const playClick = useCallback((time, isFirstBeatOfMeasure) => {
+  const playClick = useCallback((time: number, isFirstBeatOfMeasure: boolean) => {
     const audioContext = audioContextRef.current;
     if (!audioContext) return;
 
@@ -49,6 +66,8 @@ const useMetronome = () => {
   const scheduleNote = useCallback(() => {
     const secondsPerBeat = 60.0 / bpm;
     const audioContext = audioContextRef.current;
+
+    if (!audioContext) return;
 
     while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
       const currentBeatInMeasure = beatCountRef.current % beatsPerMeasure;
@@ -75,7 +94,7 @@ const useMetronome = () => {
       }
     }
 
-    timerIdRef.current = setTimeout(scheduleNote, 25);
+    timerIdRef.current = window.setTimeout(scheduleNote, 25);
   }, [bpm, beatsPerMeasure, playEveryNMeasures, playClick]);
 
   // Start metronome
@@ -83,8 +102,10 @@ const useMetronome = () => {
     if (isPlaying) return;
 
     const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
     if (audioContext.state === 'suspended') {
-      audioContext.resume();
+      void audioContext.resume();
     }
 
     beatCountRef.current = 0;
@@ -98,7 +119,7 @@ const useMetronome = () => {
   // Stop metronome
   const stop = useCallback(() => {
     setIsPlaying(false);
-    if (timerIdRef.current) {
+    if (timerIdRef.current !== null) {
       clearTimeout(timerIdRef.current);
       timerIdRef.current = null;
     }
@@ -112,13 +133,13 @@ const useMetronome = () => {
   useEffect(() => {
     if (isPlaying) {
       scheduleNote();
-    } else if (timerIdRef.current) {
+    } else if (timerIdRef.current !== null) {
       clearTimeout(timerIdRef.current);
       timerIdRef.current = null;
     }
 
     return () => {
-      if (timerIdRef.current) {
+      if (timerIdRef.current !== null) {
         clearTimeout(timerIdRef.current);
       }
     };

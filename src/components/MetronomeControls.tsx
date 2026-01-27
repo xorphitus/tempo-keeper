@@ -1,4 +1,21 @@
-import PropTypes from 'prop-types';
+import { ChangeEvent } from 'react';
+
+interface TimeSignature {
+  label: string;
+  value: number;
+}
+
+interface MetronomeControlsProps {
+  bpm: number;
+  setBpm: (bpm: number) => void;
+  beatsPerMeasure: number;
+  setBeatsPerMeasure: (beats: number) => void;
+  playEveryNMeasures: number;
+  setPlayEveryNMeasures: (n: number) => void;
+  isPlaying: boolean;
+  onStart: () => void;
+  onStop: () => void;
+}
 
 const MetronomeControls = ({
   bpm,
@@ -10,8 +27,8 @@ const MetronomeControls = ({
   isPlaying,
   onStart,
   onStop,
-}) => {
-  const commonTimeSignatures = [
+}: MetronomeControlsProps) => {
+  const commonTimeSignatures: TimeSignature[] = [
     { label: '4/4', value: 4 },
     { label: '3/4', value: 3 },
     { label: '6/8', value: 6 },
@@ -20,14 +37,14 @@ const MetronomeControls = ({
     { label: '2/4', value: 2 },
   ];
 
-  const handleBpmChange = e => {
+  const handleBpmChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
       setBpm(Math.max(30, Math.min(300, value)));
     }
   };
 
-  const handlePlayEveryNChange = e => {
+  const handlePlayEveryNChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value >= 1) {
       setPlayEveryNMeasures(value);
@@ -65,10 +82,12 @@ const MetronomeControls = ({
         <select
           id="time-signature"
           value={beatsPerMeasure}
-          onChange={e => setBeatsPerMeasure(parseInt(e.target.value, 10))}
+          onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+            setBeatsPerMeasure(parseInt(e.target.value, 10))
+          }
           disabled={isPlaying}
         >
-          {commonTimeSignatures.map(sig => (
+          {commonTimeSignatures.map((sig) => (
             <option key={sig.value} value={sig.value}>
               {sig.label}
             </option>
@@ -103,18 +122,6 @@ const MetronomeControls = ({
       </div>
     </div>
   );
-};
-
-MetronomeControls.propTypes = {
-  bpm: PropTypes.number.isRequired,
-  setBpm: PropTypes.func.isRequired,
-  beatsPerMeasure: PropTypes.number.isRequired,
-  setBeatsPerMeasure: PropTypes.func.isRequired,
-  playEveryNMeasures: PropTypes.number.isRequired,
-  setPlayEveryNMeasures: PropTypes.func.isRequired,
-  isPlaying: PropTypes.bool.isRequired,
-  onStart: PropTypes.func.isRequired,
-  onStop: PropTypes.func.isRequired,
 };
 
 export default MetronomeControls;

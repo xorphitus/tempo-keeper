@@ -1,4 +1,10 @@
-import PropTypes from 'prop-types';
+interface BeatIndicatorProps {
+  currentBeat: number;
+  currentMeasure: number;
+  beatsPerMeasure: number;
+  playEveryNMeasures: number;
+  isPlaying: boolean;
+}
 
 const BeatIndicator = ({
   currentBeat,
@@ -6,7 +12,7 @@ const BeatIndicator = ({
   beatsPerMeasure,
   playEveryNMeasures,
   isPlaying,
-}) => {
+}: BeatIndicatorProps) => {
   const isSoundingMeasure = currentMeasure % playEveryNMeasures === 1;
 
   return (
@@ -44,14 +50,6 @@ const BeatIndicator = ({
       </div>
     </div>
   );
-};
-
-BeatIndicator.propTypes = {
-  currentBeat: PropTypes.number.isRequired,
-  currentMeasure: PropTypes.number.isRequired,
-  beatsPerMeasure: PropTypes.number.isRequired,
-  playEveryNMeasures: PropTypes.number.isRequired,
-  isPlaying: PropTypes.bool.isRequired,
 };
 
 export default BeatIndicator;

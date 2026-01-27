@@ -61,3 +61,30 @@ Security must be considered throughout the development process:
   - Authentication or session management
   - Third-party integrations
   - Data storage or transmission
+
+## 7. Always Prefer Well-Typed Implementation
+
+Maintain strong type safety throughout the codebase:
+
+- **Eliminate `any` type** whenever possible - use specific types or generics instead
+- **Avoid type assertions (`as`)** unless absolutely necessary - prefer type guards and proper type narrowing
+- **Use TypeScript's type system** to catch errors at compile time rather than runtime
+- **Leverage union types and discriminated unions** for complex state management
+- **Define explicit types for function parameters and return values**
+- **Use `unknown` instead of `any`** when the type is truly unknown and needs runtime checking
+- When type assertions are unavoidable, add a comment explaining why
+
+## 8. Performance Considerations
+
+Write efficient algorithms and avoid performance pitfalls:
+
+- **Avoid O(N²) time complexity** when better solutions exist (O(N), O(N log N))
+- **Use appropriate data structures** - Maps/Sets for lookups, Arrays for ordered data
+- **Minimize nested loops** - consider using reduce, filter, map, or other functional patterns
+- **Cache expensive computations** when results are reused
+- **Profile before optimizing** - don't prematurely optimize without measurements
+- **Consider space-time tradeoffs** - sometimes using more memory improves time complexity
+- For DOM operations:
+  - Batch updates to minimize reflows
+  - Use React's reconciliation efficiently (proper keys, memoization)
+  - Debounce/throttle frequent event handlers
