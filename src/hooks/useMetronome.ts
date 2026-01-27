@@ -102,7 +102,8 @@ const useMetronome = (): UseMetronomeReturn => {
       const isFirstBeatOfMeasure = currentBeatInMeasure === 0;
 
       // Determine if we should play sound on this measure
-      const shouldPlayThisMeasure = measureCountRef.current % playEveryNMeasures === 1;
+      const shouldPlayThisMeasure =
+        playEveryNMeasures === 1 || measureCountRef.current % playEveryNMeasures === 1;
 
       if (shouldPlayThisMeasure) {
         playClick(nextNoteTimeRef.current, isFirstBeatOfMeasure);

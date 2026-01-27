@@ -13,7 +13,7 @@ const BeatIndicator = ({
   playEveryNMeasures,
   isPlaying,
 }: BeatIndicatorProps) => {
-  const isSoundingMeasure = currentMeasure % playEveryNMeasures === 1;
+  const isSoundingMeasure = playEveryNMeasures === 1 || currentMeasure % playEveryNMeasures === 1;
 
   return (
     <div className="beat-indicator">
