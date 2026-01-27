@@ -27,6 +27,7 @@ const useMetronome = (): UseMetronomeReturn => {
   const timerIdRef = useRef<number | null>(null);
   const beatCountRef = useRef(0);
   const measureCountRef = useRef(1);
+  const scheduleNoteRef = useRef<() => void>(() => {});
 
   // Validated setter for BPM (40-240 range)
   const setBpm = useCallback((value: number) => {
@@ -91,40 +92,46 @@ const useMetronome = (): UseMetronomeReturn => {
   }, []);
 
   // Schedule notes ahead of time for precise timing
-  const scheduleNote = useCallback(() => {
-    const secondsPerBeat = 60.0 / bpm;
-    const audioContext = audioContextRef.current;
+  useEffect(() => {
+    scheduleNoteRef.current = () => {
+      const secondsPerBeat = 60.0 / bpm;
+      const audioContext = audioContextRef.current;
 
-    if (!audioContext) return;
+      if (!audioContext) return;
 
-    while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
-      const currentBeatInMeasure = beatCountRef.current % beatsPerMeasure;
-      const isFirstBeatOfMeasure = currentBeatInMeasure === 0;
+      while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
+        const currentBeatInMeasure = beatCountRef.current % beatsPerMeasure;
+        const isFirstBeatOfMeasure = currentBeatInMeasure === 0;
 
-      // Determine if we should play sound on this measure
-      const shouldPlayThisMeasure =
-        playEveryNMeasures === 1 || measureCountRef.current % playEveryNMeasures === 1;
+        // Determine if we should play sound on this measure
+        const shouldPlayThisMeasure =
+          playEveryNMeasures === 1 || measureCountRef.current % playEveryNMeasures === 1;
 
-      if (shouldPlayThisMeasure) {
-        playClick(nextNoteTimeRef.current, isFirstBeatOfMeasure);
+        if (shouldPlayThisMeasure) {
+          playClick(nextNoteTimeRef.current, isFirstBeatOfMeasure);
+        }
+
+        // Update UI state
+        setCurrentBeat(currentBeatInMeasure + 1);
+        setCurrentMeasure(measureCountRef.current);
+
+        // Move to next beat
+        nextNoteTimeRef.current += secondsPerBeat;
+        beatCountRef.current++;
+
+        // Check if we've completed a measure
+        if (beatCountRef.current % beatsPerMeasure === 0) {
+          measureCountRef.current++;
+        }
       }
 
-      // Update UI state
-      setCurrentBeat(currentBeatInMeasure + 1);
-      setCurrentMeasure(measureCountRef.current);
-
-      // Move to next beat
-      nextNoteTimeRef.current += secondsPerBeat;
-      beatCountRef.current++;
-
-      // Check if we've completed a measure
-      if (beatCountRef.current % beatsPerMeasure === 0) {
-        measureCountRef.current++;
-      }
-    }
-
-    timerIdRef.current = window.setTimeout(scheduleNote, 25);
+      timerIdRef.current = window.setTimeout(scheduleNoteRef.current, 25);
+    };
   }, [bpm, beatsPerMeasure, playEveryNMeasures, playClick]);
+
+  const scheduleNote = useCallback(() => {
+    scheduleNoteRef.current();
+  }, []);
 
   // Start metronome
   const start = useCallback(() => {
