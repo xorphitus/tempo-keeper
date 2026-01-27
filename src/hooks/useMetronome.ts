@@ -16,11 +16,11 @@ interface UseMetronomeReturn {
 
 const useMetronome = (): UseMetronomeReturn => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(120);
-  const [beatsPerMeasure, setBeatsPerMeasure] = useState(4);
+  const [bpm, setBpmInternal] = useState(120);
+  const [beatsPerMeasure, setBeatsPerMeasureInternal] = useState(4);
   const [currentBeat, setCurrentBeat] = useState(0);
   const [currentMeasure, setCurrentMeasure] = useState(1);
-  const [playEveryNMeasures, setPlayEveryNMeasures] = useState(1);
+  const [playEveryNMeasures, setPlayEveryNMeasuresInternal] = useState(1);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const nextNoteTimeRef = useRef(0);
@@ -28,15 +28,43 @@ const useMetronome = (): UseMetronomeReturn => {
   const beatCountRef = useRef(0);
   const measureCountRef = useRef(1);
 
-  // Initialize Web Audio API
+  // Validated setter for BPM (40-240 range)
+  const setBpm = useCallback((value: number) => {
+    if (isNaN(value) || value < 40 || value > 240) return;
+    setBpmInternal(Math.floor(value));
+  }, []);
+
+  // Validated setter for beats per measure (1-16 range)
+  const setBeatsPerMeasure = useCallback((value: number) => {
+    if (isNaN(value) || value < 1 || value > 16) return;
+    setBeatsPerMeasureInternal(Math.floor(value));
+  }, []);
+
+  // Validated setter for play every N measures (1-32 range)
+  const setPlayEveryNMeasures = useCallback((value: number) => {
+    if (isNaN(value) || value < 1 || value > 32) return;
+    setPlayEveryNMeasuresInternal(Math.floor(value));
+  }, []);
+
+  // Initialize Web Audio API with error handling
   useEffect(() => {
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (AudioContextClass) {
-      audioContextRef.current = new AudioContextClass();
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioContextClass) {
+        audioContextRef.current = new AudioContextClass();
+      } else {
+        console.error('Web Audio API is not supported in this browser');
+      }
+    } catch (error) {
+      console.error('Failed to initialize AudioContext:', error);
     }
     return () => {
       if (audioContextRef.current) {
-        void audioContextRef.current.close();
+        void audioContextRef.current.close().catch(error => {
+          console.error('Failed to close AudioContext:', error);
+        });
       }
     };
   }, []);
@@ -102,10 +130,16 @@ const useMetronome = (): UseMetronomeReturn => {
     if (isPlaying) return;
 
     const audioContext = audioContextRef.current;
-    if (!audioContext) return;
+    if (!audioContext) {
+      console.error('AudioContext is not initialized');
+      return;
+    }
 
+    // Resume AudioContext if suspended (browser autoplay policy)
     if (audioContext.state === 'suspended') {
-      void audioContext.resume();
+      void audioContext.resume().catch(error => {
+        console.error('Failed to resume AudioContext:', error);
+      });
     }
 
     beatCountRef.current = 0;

@@ -1,0 +1,4 @@
+Contact: https://github.com/xorphitus/tempo-keeper/security/advisories/new
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://example.com/.well-known/security.txt

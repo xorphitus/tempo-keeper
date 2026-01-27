@@ -87,7 +87,7 @@ const MetronomeControls = ({
           }
           disabled={isPlaying}
         >
-          {commonTimeSignatures.map((sig) => (
+          {commonTimeSignatures.map(sig => (
             <option key={sig.value} value={sig.value}>
               {sig.label}
             </option>
