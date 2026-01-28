@@ -1,4 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  validateBpm,
+  validateBeatsPerMeasure,
+  validatePlayEveryNMeasures,
+  isSoundingMeasure,
+  isFirstBeatOfMeasure,
+  calculateSecondsPerBeat,
+} from '../domain/metronome';
 
 interface UseMetronomeReturn {
   isPlaying: boolean;
@@ -31,20 +39,26 @@ const useMetronome = (): UseMetronomeReturn => {
 
   // Validated setter for BPM (40-240 range)
   const setBpm = useCallback((value: number) => {
-    if (isNaN(value) || value < 40 || value > 240) return;
-    setBpmInternal(Math.floor(value));
+    const validated = validateBpm(value);
+    if (validated !== null) {
+      setBpmInternal(validated);
+    }
   }, []);
 
   // Validated setter for beats per measure (1-16 range)
   const setBeatsPerMeasure = useCallback((value: number) => {
-    if (isNaN(value) || value < 1 || value > 16) return;
-    setBeatsPerMeasureInternal(Math.floor(value));
+    const validated = validateBeatsPerMeasure(value);
+    if (validated !== null) {
+      setBeatsPerMeasureInternal(validated);
+    }
   }, []);
 
   // Validated setter for play every N measures (1-32 range)
   const setPlayEveryNMeasures = useCallback((value: number) => {
-    if (isNaN(value) || value < 1 || value > 32) return;
-    setPlayEveryNMeasuresInternal(Math.floor(value));
+    const validated = validatePlayEveryNMeasures(value);
+    if (validated !== null) {
+      setPlayEveryNMeasuresInternal(validated);
+    }
   }, []);
 
   // Initialize Web Audio API with error handling
@@ -94,21 +108,23 @@ const useMetronome = (): UseMetronomeReturn => {
   // Schedule notes ahead of time for precise timing
   useEffect(() => {
     scheduleNoteRef.current = () => {
-      const secondsPerBeat = 60.0 / bpm;
+      const secondsPerBeat = calculateSecondsPerBeat(bpm);
       const audioContext = audioContextRef.current;
 
       if (!audioContext) return;
 
       while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
         const currentBeatInMeasure = beatCountRef.current % beatsPerMeasure;
-        const isFirstBeatOfMeasure = currentBeatInMeasure === 0;
+        const isFirstBeat = isFirstBeatOfMeasure(beatCountRef.current, beatsPerMeasure);
 
         // Determine if we should play sound on this measure
-        const shouldPlayThisMeasure =
-          playEveryNMeasures === 1 || measureCountRef.current % playEveryNMeasures === 1;
+        const shouldPlayThisMeasure = isSoundingMeasure(
+          measureCountRef.current,
+          playEveryNMeasures
+        );
 
         if (shouldPlayThisMeasure) {
-          playClick(nextNoteTimeRef.current, isFirstBeatOfMeasure);
+          playClick(nextNoteTimeRef.current, isFirstBeat);
         }
 
         // Update UI state
@@ -120,7 +136,7 @@ const useMetronome = (): UseMetronomeReturn => {
         beatCountRef.current++;
 
         // Check if we've completed a measure
-        if (beatCountRef.current % beatsPerMeasure === 0) {
+        if (isFirstBeatOfMeasure(beatCountRef.current, beatsPerMeasure)) {
           measureCountRef.current++;
         }
       }

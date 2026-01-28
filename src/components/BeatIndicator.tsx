@@ -1,3 +1,5 @@
+import { isSoundingMeasure } from '../domain/metronome';
+
 interface BeatIndicatorProps {
   currentBeat: number;
   currentMeasure: number;
@@ -13,18 +15,18 @@ const BeatIndicator = ({
   playEveryNMeasures,
   isPlaying,
 }: BeatIndicatorProps) => {
-  const isSoundingMeasure = playEveryNMeasures === 1 || currentMeasure % playEveryNMeasures === 1;
+  const isSounding = isSoundingMeasure(currentMeasure, playEveryNMeasures);
 
   return (
     <div className="beat-indicator">
       <div className="measure-info">
         <div className="measure-number">
           <span className="label">Measure</span>
-          <span className={`value ${isSoundingMeasure ? 'sounding' : 'silent'}`}>
+          <span className={`value ${isSounding ? 'sounding' : 'silent'}`}>
             {isPlaying ? currentMeasure : '-'}
           </span>
           {isPlaying && (
-            <span className="measure-status">{isSoundingMeasure ? '(Playing)' : '(Silent)'}</span>
+            <span className="measure-status">{isSounding ? '(Playing)' : '(Silent)'}</span>
           )}
         </div>
       </div>
@@ -40,7 +42,7 @@ const BeatIndicator = ({
               key={beatNumber}
               className={`beat ${isActive && isPlaying ? 'active' : ''} ${
                 isFirstBeat ? 'first-beat' : ''
-              } ${isActive && isPlaying && isSoundingMeasure ? 'sounding' : ''}`}
+              } ${isActive && isPlaying && isSounding ? 'sounding' : ''}`}
             >
               <div className="beat-circle"></div>
               <span className="beat-number">{beatNumber}</span>
