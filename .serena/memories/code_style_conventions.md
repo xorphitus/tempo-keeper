@@ -17,11 +17,14 @@
 - React version: 18.2
 
 ## File Naming
-- React components: PascalCase (.jsx extension)
+- React components: PascalCase (.tsx extension)
+- Hooks: camelCase with use prefix (.ts extension)
 - Styles: kebab-case or matching component name (.css extension)
-- Main entry: lowercase (main.jsx, index.html)
+- Main entry: lowercase (main.tsx, index.html)
+- Tests: ComponentName.test.tsx
 
 ## Component Style
 - Functional components preferred
-- React 18 JSX runtime (no need to import React explicitly)
+- React 19 JSX runtime (no need to import React explicitly)
 - Export default for main component
+- Interfaces defined at top of file for props

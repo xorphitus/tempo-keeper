@@ -1,6 +1,7 @@
 {
   "name": "tempo-keeper",
   "version": "1.0.0",
+  "type": "module",
   "description": "A web metronome application built with React",
   "main": "index.js",
   "scripts": {

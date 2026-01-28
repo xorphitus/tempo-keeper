@@ -40,7 +40,7 @@ const MetronomeControls = ({
   const handleBpmChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
-      setBpm(Math.max(30, Math.min(300, value)));
+      setBpm(Math.max(40, Math.min(240, value)));
     }
   };
 
@@ -59,16 +59,16 @@ const MetronomeControls = ({
           <input
             id="bpm"
             type="range"
-            min="30"
-            max="300"
+            min="40"
+            max="240"
             value={bpm}
             onChange={handleBpmChange}
             disabled={isPlaying}
           />
           <input
             type="number"
-            min="30"
-            max="300"
+            min="40"
+            max="240"
             value={bpm}
             onChange={handleBpmChange}
             disabled={isPlaying}
