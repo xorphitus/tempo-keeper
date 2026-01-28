@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
 interface TimeSignature {
   label: string;
@@ -28,6 +28,17 @@ const MetronomeControls = ({
   onStart,
   onStop,
 }: MetronomeControlsProps) => {
+  const [bpmDisplay, setBpmDisplay] = useState(String(bpm));
+  const [playEveryNDisplay, setPlayEveryNDisplay] = useState(String(playEveryNMeasures));
+
+  useEffect(() => {
+    setBpmDisplay(String(bpm));
+  }, [bpm]);
+
+  useEffect(() => {
+    setPlayEveryNDisplay(String(playEveryNMeasures));
+  }, [playEveryNMeasures]);
+
   const commonTimeSignatures: TimeSignature[] = [
     { label: '4/4', value: 4 },
     { label: '3/4', value: 3 },
@@ -37,17 +48,36 @@ const MetronomeControls = ({
     { label: '2/4', value: 2 },
   ];
 
-  const handleBpmChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBpmDisplayChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setBpmDisplay(e.target.value);
+  };
+
+  const handleBpmBlur = () => {
+    const value = parseInt(bpmDisplay, 10);
+    if (!isNaN(value)) {
+      setBpm(Math.max(40, Math.min(240, value)));
+    } else {
+      setBpmDisplay(String(bpm));
+    }
+  };
+
+  const handleBpmRangeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
       setBpm(Math.max(40, Math.min(240, value)));
     }
   };
 
-  const handlePlayEveryNChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handlePlayEveryNDisplayChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPlayEveryNDisplay(e.target.value);
+  };
+
+  const handlePlayEveryNBlur = () => {
+    const value = parseInt(playEveryNDisplay, 10);
     if (!isNaN(value) && value >= 1) {
-      setPlayEveryNMeasures(value);
+      setPlayEveryNMeasures(Math.min(16, value));
+    } else {
+      setPlayEveryNDisplay(String(playEveryNMeasures));
     }
   };
 
@@ -62,15 +92,16 @@ const MetronomeControls = ({
             min="40"
             max="240"
             value={bpm}
-            onChange={handleBpmChange}
+            onChange={handleBpmRangeChange}
             disabled={isPlaying}
           />
           <input
             type="number"
             min="40"
             max="240"
-            value={bpm}
-            onChange={handleBpmChange}
+            value={bpmDisplay}
+            onChange={handleBpmDisplayChange}
+            onBlur={handleBpmBlur}
             disabled={isPlaying}
             className="bpm-number"
           />
@@ -103,8 +134,9 @@ const MetronomeControls = ({
             type="number"
             min="1"
             max="16"
-            value={playEveryNMeasures}
-            onChange={handlePlayEveryNChange}
+            value={playEveryNDisplay}
+            onChange={handlePlayEveryNDisplayChange}
+            onBlur={handlePlayEveryNBlur}
             disabled={isPlaying}
           />
           <span className="help-text">
