@@ -22,9 +22,6 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Tempo Keeper</h1>
-        <p className="app-description">
-          Train your internal tempo by practicing with selective measure playback
-        </p>
       </header>
 
       <main className="app-main">
