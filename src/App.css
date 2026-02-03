@@ -75,6 +75,9 @@
   font-size: 1rem;
   color: #666;
   font-weight: normal;
+  min-width: 5.5rem;
+  display: inline-block;
+  text-align: center;
 }
 
 .beats-display {
