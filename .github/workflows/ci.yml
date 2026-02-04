@@ -10,10 +10,6 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [22.x, 24.x]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -23,14 +19,17 @@ jobs:
         with:
           version: 10
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24.x
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Run security audit
         run: pnpm audit --audit-level=moderate
@@ -44,11 +43,13 @@ jobs:
       - name: Run tests
         run: pnpm run test
 
+      - name: Run E2E tests
+        run: pnpm run test:e2e
+
       - name: Build project
         run: pnpm run build
 
       - name: Upload build artifacts
-        if: matrix.node-version == '24.x'
         uses: actions/upload-artifact@v6
         with:
           name: build
