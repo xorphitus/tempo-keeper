@@ -6,6 +6,7 @@ interface BeatIndicatorProps {
   beatsPerMeasure: number;
   playEveryNMeasures: number;
   isPlaying: boolean;
+  isCountingIn: boolean;
 }
 
 const BeatIndicator = ({
@@ -14,20 +15,21 @@ const BeatIndicator = ({
   beatsPerMeasure,
   playEveryNMeasures,
   isPlaying,
+  isCountingIn,
 }: BeatIndicatorProps) => {
   const isSounding = isSoundingMeasure(currentMeasure, playEveryNMeasures);
+
+  const measureLabel = isCountingIn ? 'Count-in' : 'Measure';
+  const valueClass = isCountingIn ? 'counting-in' : isSounding ? 'sounding' : 'silent';
+  const statusText = isCountingIn ? '(Count-in)' : isSounding ? '(Playing)' : '(Silent)';
 
   return (
     <div className="beat-indicator">
       <div className="measure-info">
         <div className="measure-number">
-          <span className="label">Measure</span>
-          <span className={`value ${isSounding ? 'sounding' : 'silent'}`}>
-            {isPlaying ? currentMeasure : '-'}
-          </span>
-          {isPlaying && (
-            <span className="measure-status">{isSounding ? '(Playing)' : '(Silent)'}</span>
-          )}
+          <span className="label">{measureLabel}</span>
+          <span className={`value ${valueClass}`}>{isPlaying ? currentMeasure : '-'}</span>
+          {isPlaying && <span className="measure-status">{statusText}</span>}
         </div>
       </div>
 
@@ -42,7 +44,9 @@ const BeatIndicator = ({
               key={beatNumber}
               className={`beat ${isActive && isPlaying ? 'active' : ''} ${
                 isFirstBeat ? 'first-beat' : ''
-              } ${isActive && isPlaying && isSounding ? 'sounding' : ''}`}
+              } ${isActive && isPlaying && isSounding && !isCountingIn ? 'sounding' : ''} ${
+                isActive && isPlaying && isCountingIn ? 'counting-in' : ''
+              }`}
             >
               <div className="beat-circle"></div>
               <span className="beat-number">{beatNumber}</span>

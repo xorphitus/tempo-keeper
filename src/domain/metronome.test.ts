@@ -3,8 +3,11 @@ import {
   validateBpm,
   validateBeatsPerMeasure,
   validatePlayEveryNMeasures,
+  validateCountInMeasures,
   isSoundingMeasure,
+  isCountInPhase,
   calculateBeatState,
+  calculateCountInBeatState,
   isFirstBeatOfMeasure,
   calculateSecondsPerBeat,
   BPM_MIN,
@@ -13,6 +16,8 @@ import {
   BEATS_PER_MEASURE_MAX,
   PLAY_EVERY_N_MIN,
   PLAY_EVERY_N_MAX,
+  COUNT_IN_MEASURES_MIN,
+  COUNT_IN_MEASURES_MAX,
 } from './metronome';
 
 describe('validateBpm', () => {
@@ -236,5 +241,104 @@ describe('calculateSecondsPerBeat', () => {
     expect(calculateSecondsPerBeat(90)).toBeCloseTo(0.6667, 3);
     expect(calculateSecondsPerBeat(80)).toBe(0.75);
     expect(calculateSecondsPerBeat(100)).toBe(0.6);
+  });
+});
+
+describe('validateCountInMeasures', () => {
+  it('returns floored value for valid count-in measures', () => {
+    expect(validateCountInMeasures(0)).toBe(0);
+    expect(validateCountInMeasures(2)).toBe(2);
+    expect(validateCountInMeasures(3.9)).toBe(3);
+  });
+
+  it('returns null for values below minimum', () => {
+    expect(validateCountInMeasures(-1)).toBeNull();
+    expect(validateCountInMeasures(-10)).toBeNull();
+  });
+
+  it('returns null for values above maximum', () => {
+    expect(validateCountInMeasures(5)).toBeNull();
+    expect(validateCountInMeasures(100)).toBeNull();
+  });
+
+  it('accepts boundary values', () => {
+    expect(validateCountInMeasures(COUNT_IN_MEASURES_MIN)).toBe(COUNT_IN_MEASURES_MIN);
+    expect(validateCountInMeasures(COUNT_IN_MEASURES_MAX)).toBe(COUNT_IN_MEASURES_MAX);
+  });
+
+  it('returns null for NaN', () => {
+    expect(validateCountInMeasures(NaN)).toBeNull();
+  });
+});
+
+describe('isCountInPhase', () => {
+  describe('when countInMeasures is 0', () => {
+    it('always returns false', () => {
+      expect(isCountInPhase(0, 0, 4)).toBe(false);
+      expect(isCountInPhase(1, 0, 4)).toBe(false);
+      expect(isCountInPhase(100, 0, 4)).toBe(false);
+    });
+  });
+
+  describe('when countInMeasures is 1 with 4 beats per measure', () => {
+    it('returns true for beats 0-3', () => {
+      expect(isCountInPhase(0, 1, 4)).toBe(true);
+      expect(isCountInPhase(1, 1, 4)).toBe(true);
+      expect(isCountInPhase(2, 1, 4)).toBe(true);
+      expect(isCountInPhase(3, 1, 4)).toBe(true);
+    });
+
+    it('returns false from beat 4 onward', () => {
+      expect(isCountInPhase(4, 1, 4)).toBe(false);
+      expect(isCountInPhase(5, 1, 4)).toBe(false);
+      expect(isCountInPhase(100, 1, 4)).toBe(false);
+    });
+  });
+
+  describe('when countInMeasures is 2 with 3 beats per measure', () => {
+    it('returns true for beats 0-5', () => {
+      for (let i = 0; i < 6; i++) {
+        expect(isCountInPhase(i, 2, 3)).toBe(true);
+      }
+    });
+
+    it('returns false from beat 6 onward', () => {
+      expect(isCountInPhase(6, 2, 3)).toBe(false);
+      expect(isCountInPhase(7, 2, 3)).toBe(false);
+    });
+  });
+
+  describe('when countInMeasures is 4 with 4 beats per measure', () => {
+    it('returns true for beats 0-15', () => {
+      for (let i = 0; i < 16; i++) {
+        expect(isCountInPhase(i, 4, 4)).toBe(true);
+      }
+    });
+
+    it('returns false from beat 16 onward', () => {
+      expect(isCountInPhase(16, 4, 4)).toBe(false);
+    });
+  });
+});
+
+describe('calculateCountInBeatState', () => {
+  describe('with 4 beats per measure', () => {
+    it('calculates beat/measure within count-in', () => {
+      expect(calculateCountInBeatState(0, 4)).toEqual({ beat: 1, measure: 1 });
+      expect(calculateCountInBeatState(1, 4)).toEqual({ beat: 2, measure: 1 });
+      expect(calculateCountInBeatState(2, 4)).toEqual({ beat: 3, measure: 1 });
+      expect(calculateCountInBeatState(3, 4)).toEqual({ beat: 4, measure: 1 });
+      expect(calculateCountInBeatState(4, 4)).toEqual({ beat: 1, measure: 2 });
+      expect(calculateCountInBeatState(7, 4)).toEqual({ beat: 4, measure: 2 });
+    });
+  });
+
+  describe('with 3 beats per measure', () => {
+    it('calculates beat/measure within count-in', () => {
+      expect(calculateCountInBeatState(0, 3)).toEqual({ beat: 1, measure: 1 });
+      expect(calculateCountInBeatState(2, 3)).toEqual({ beat: 3, measure: 1 });
+      expect(calculateCountInBeatState(3, 3)).toEqual({ beat: 1, measure: 2 });
+      expect(calculateCountInBeatState(5, 3)).toEqual({ beat: 3, measure: 2 });
+    });
   });
 });

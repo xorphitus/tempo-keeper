@@ -12,6 +12,8 @@ interface MetronomeControlsProps {
   setBeatsPerMeasure: (beats: number) => void;
   playEveryNMeasures: number;
   setPlayEveryNMeasures: (n: number) => void;
+  countInMeasures: number;
+  setCountInMeasures: (n: number) => void;
   isPlaying: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -24,12 +26,15 @@ const MetronomeControls = ({
   setBeatsPerMeasure,
   playEveryNMeasures,
   setPlayEveryNMeasures,
+  countInMeasures,
+  setCountInMeasures,
   isPlaying,
   onStart,
   onStop,
 }: MetronomeControlsProps) => {
   const [bpmDisplay, setBpmDisplay] = useState(String(bpm));
   const [playEveryNDisplay, setPlayEveryNDisplay] = useState(String(playEveryNMeasures));
+  const [countInDisplay, setCountInDisplay] = useState(String(countInMeasures));
 
   useEffect(() => {
     setBpmDisplay(String(bpm));
@@ -38,6 +43,10 @@ const MetronomeControls = ({
   useEffect(() => {
     setPlayEveryNDisplay(String(playEveryNMeasures));
   }, [playEveryNMeasures]);
+
+  useEffect(() => {
+    setCountInDisplay(String(countInMeasures));
+  }, [countInMeasures]);
 
   const commonTimeSignatures: TimeSignature[] = [
     { label: '4/4', value: 4 },
@@ -78,6 +87,19 @@ const MetronomeControls = ({
       setPlayEveryNMeasures(Math.min(16, value));
     } else {
       setPlayEveryNDisplay(String(playEveryNMeasures));
+    }
+  };
+
+  const handleCountInDisplayChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCountInDisplay(e.target.value);
+  };
+
+  const handleCountInBlur = () => {
+    const value = parseInt(countInDisplay, 10);
+    if (!isNaN(value) && value >= 0) {
+      setCountInMeasures(Math.min(4, value));
+    } else {
+      setCountInDisplay(String(countInMeasures));
     }
   };
 
@@ -143,6 +165,27 @@ const MetronomeControls = ({
             {playEveryNMeasures === 1
               ? 'Playing every measure'
               : `Playing 1 out of every ${playEveryNMeasures} measures`}
+          </span>
+        </div>
+      </div>
+
+      <div className="control-group">
+        <label htmlFor="count-in">Count-In Measures</label>
+        <div className="n-measures-control">
+          <input
+            id="count-in"
+            type="number"
+            min="0"
+            max="4"
+            value={countInDisplay}
+            onChange={handleCountInDisplayChange}
+            onBlur={handleCountInBlur}
+            disabled={isPlaying}
+          />
+          <span className="help-text">
+            {countInMeasures === 0
+              ? 'No count-in'
+              : `${countInMeasures} measure${countInMeasures > 1 ? 's' : ''} count-in before playing`}
           </span>
         </div>
       </div>
