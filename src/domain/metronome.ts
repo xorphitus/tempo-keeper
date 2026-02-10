@@ -10,6 +10,8 @@ export const BEATS_PER_MEASURE_MIN = 1;
 export const BEATS_PER_MEASURE_MAX = 16;
 export const PLAY_EVERY_N_MIN = 1;
 export const PLAY_EVERY_N_MAX = 32;
+export const COUNT_IN_MEASURES_MIN = 0;
+export const COUNT_IN_MEASURES_MAX = 4;
 
 /**
  * Validation result type.
@@ -101,6 +103,49 @@ export const calculateBeatState = (beatCount: number, beatsPerMeasure: number): 
  */
 export const isFirstBeatOfMeasure = (beatCount: number, beatsPerMeasure: number): boolean => {
   return beatCount % beatsPerMeasure === 0;
+};
+
+/**
+ * Validates and normalizes count-in measures value.
+ * @param value - The count-in measures value to validate
+ * @returns The floored value if valid (0-4), null otherwise
+ */
+export const validateCountInMeasures = (value: number): ValidationResult => {
+  if (isNaN(value) || value < COUNT_IN_MEASURES_MIN || value > COUNT_IN_MEASURES_MAX) {
+    return null;
+  }
+  return Math.floor(value);
+};
+
+/**
+ * Determines if the current beat is within the count-in phase.
+ *
+ * @param beatCount - The total beat count from the start (0-indexed)
+ * @param countInMeasures - Number of count-in measures (0-4)
+ * @param beatsPerMeasure - Number of beats per measure
+ * @returns true if still in the count-in phase
+ */
+export const isCountInPhase = (
+  beatCount: number,
+  countInMeasures: number,
+  beatsPerMeasure: number
+): boolean => {
+  return countInMeasures > 0 && beatCount < countInMeasures * beatsPerMeasure;
+};
+
+/**
+ * Calculates the beat state within the count-in phase.
+ * Returns 1-indexed beat and measure within the count-in.
+ *
+ * @param beatCount - The total beat count from the start (0-indexed)
+ * @param beatsPerMeasure - Number of beats per measure
+ * @returns The beat state with 1-indexed beat and measure within count-in
+ */
+export const calculateCountInBeatState = (
+  beatCount: number,
+  beatsPerMeasure: number
+): BeatState => {
+  return calculateBeatState(beatCount, beatsPerMeasure);
 };
 
 /**

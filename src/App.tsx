@@ -14,6 +14,9 @@ function App() {
     currentMeasure,
     playEveryNMeasures,
     setPlayEveryNMeasures,
+    countInMeasures,
+    setCountInMeasures,
+    isCountingIn,
     start,
     stop,
   } = useMetronome();
@@ -31,6 +34,7 @@ function App() {
           beatsPerMeasure={beatsPerMeasure}
           playEveryNMeasures={playEveryNMeasures}
           isPlaying={isPlaying}
+          isCountingIn={isCountingIn}
         />
 
         <MetronomeControls
@@ -40,6 +44,8 @@ function App() {
           setBeatsPerMeasure={setBeatsPerMeasure}
           playEveryNMeasures={playEveryNMeasures}
           setPlayEveryNMeasures={setPlayEveryNMeasures}
+          countInMeasures={countInMeasures}
+          setCountInMeasures={setCountInMeasures}
           isPlaying={isPlaying}
           onStart={start}
           onStop={stop}
