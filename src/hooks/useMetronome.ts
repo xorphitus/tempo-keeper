@@ -3,9 +3,12 @@ import {
   validateBpm,
   validateBeatsPerMeasure,
   validatePlayEveryNMeasures,
+  validateCountInMeasures,
   isSoundingMeasure,
+  isCountInPhase,
   isFirstBeatOfMeasure,
   calculateSecondsPerBeat,
+  calculateCountInBeatState,
 } from '../domain/metronome';
 
 interface UseMetronomeReturn {
@@ -18,6 +21,9 @@ interface UseMetronomeReturn {
   currentMeasure: number;
   playEveryNMeasures: number;
   setPlayEveryNMeasures: (n: number) => void;
+  countInMeasures: number;
+  setCountInMeasures: (n: number) => void;
+  isCountingIn: boolean;
   start: () => void;
   stop: () => void;
 }
@@ -29,6 +35,8 @@ const useMetronome = (): UseMetronomeReturn => {
   const [currentBeat, setCurrentBeat] = useState(0);
   const [currentMeasure, setCurrentMeasure] = useState(1);
   const [playEveryNMeasures, setPlayEveryNMeasuresInternal] = useState(1);
+  const [countInMeasures, setCountInMeasuresInternal] = useState(0);
+  const [isCountingIn, setIsCountingIn] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const nextNoteTimeRef = useRef(0);
@@ -58,6 +66,14 @@ const useMetronome = (): UseMetronomeReturn => {
     const validated = validatePlayEveryNMeasures(value);
     if (validated !== null) {
       setPlayEveryNMeasuresInternal(validated);
+    }
+  }, []);
+
+  // Validated setter for count-in measures (0-4 range)
+  const setCountInMeasures = useCallback((value: number) => {
+    const validated = validateCountInMeasures(value);
+    if (validated !== null) {
+      setCountInMeasuresInternal(validated);
     }
   }, []);
 
@@ -105,45 +121,90 @@ const useMetronome = (): UseMetronomeReturn => {
     oscillator.stop(time + 0.1);
   }, []);
 
+  // Play a count-in click sound (distinct triangle waveform)
+  const playCountInClick = useCallback((time: number, isFirstBeat: boolean) => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.type = 'triangle';
+    oscillator.frequency.value = isFirstBeat ? 1200 : 1000;
+
+    gainNode.gain.setValueAtTime(0.3, time);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+
+    oscillator.start(time);
+    oscillator.stop(time + 0.1);
+  }, []);
+
   // Schedule notes ahead of time for precise timing
   useEffect(() => {
     scheduleNoteRef.current = () => {
       const secondsPerBeat = calculateSecondsPerBeat(bpm);
       const audioContext = audioContextRef.current;
+      const totalCountInBeats = countInMeasures * beatsPerMeasure;
 
       if (!audioContext) return;
 
       while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
-        const currentBeatInMeasure = beatCountRef.current % beatsPerMeasure;
-        const isFirstBeat = isFirstBeatOfMeasure(beatCountRef.current, beatsPerMeasure);
+        const inCountIn = isCountInPhase(beatCountRef.current, countInMeasures, beatsPerMeasure);
 
-        // Determine if we should play sound on this measure
-        const shouldPlayThisMeasure = isSoundingMeasure(
-          measureCountRef.current,
-          playEveryNMeasures
-        );
+        if (inCountIn) {
+          // Count-in phase
+          const countInState = calculateCountInBeatState(beatCountRef.current, beatsPerMeasure);
+          const isFirstBeat = countInState.beat === 1;
 
-        if (shouldPlayThisMeasure) {
-          playClick(nextNoteTimeRef.current, isFirstBeat);
+          playCountInClick(nextNoteTimeRef.current, isFirstBeat);
+
+          setCurrentBeat(countInState.beat);
+          setCurrentMeasure(countInState.measure);
+          setIsCountingIn(true);
+        } else {
+          // Normal playback phase
+          const effectiveBeatCount = beatCountRef.current - totalCountInBeats;
+          const currentBeatInMeasure = effectiveBeatCount % beatsPerMeasure;
+          const isFirstBeat = isFirstBeatOfMeasure(effectiveBeatCount, beatsPerMeasure);
+
+          // Update measure counter on first beat after count-in, or at measure boundaries
+          if (effectiveBeatCount === 0) {
+            measureCountRef.current = 1;
+          }
+
+          const shouldPlayThisMeasure = isSoundingMeasure(
+            measureCountRef.current,
+            playEveryNMeasures
+          );
+
+          if (shouldPlayThisMeasure) {
+            playClick(nextNoteTimeRef.current, isFirstBeat);
+          }
+
+          setCurrentBeat(currentBeatInMeasure + 1);
+          setCurrentMeasure(measureCountRef.current);
+          setIsCountingIn(false);
         }
-
-        // Update UI state
-        setCurrentBeat(currentBeatInMeasure + 1);
-        setCurrentMeasure(measureCountRef.current);
 
         // Move to next beat
         nextNoteTimeRef.current += secondsPerBeat;
         beatCountRef.current++;
 
-        // Check if we've completed a measure
-        if (isFirstBeatOfMeasure(beatCountRef.current, beatsPerMeasure)) {
-          measureCountRef.current++;
+        // Check if we've completed a measure (for normal playback measure tracking)
+        if (!isCountInPhase(beatCountRef.current, countInMeasures, beatsPerMeasure)) {
+          const effectiveBeatCount = beatCountRef.current - totalCountInBeats;
+          if (effectiveBeatCount > 0 && isFirstBeatOfMeasure(effectiveBeatCount, beatsPerMeasure)) {
+            measureCountRef.current++;
+          }
         }
       }
 
       timerIdRef.current = window.setTimeout(scheduleNoteRef.current, 25);
     };
-  }, [bpm, beatsPerMeasure, playEveryNMeasures, playClick]);
+  }, [bpm, beatsPerMeasure, playEveryNMeasures, countInMeasures, playClick, playCountInClick]);
 
   const scheduleNote = useCallback(() => {
     scheduleNoteRef.current();
@@ -177,6 +238,7 @@ const useMetronome = (): UseMetronomeReturn => {
   // Stop metronome
   const stop = useCallback(() => {
     setIsPlaying(false);
+    setIsCountingIn(false);
     if (timerIdRef.current !== null) {
       clearTimeout(timerIdRef.current);
       timerIdRef.current = null;
@@ -213,6 +275,9 @@ const useMetronome = (): UseMetronomeReturn => {
     currentMeasure,
     playEveryNMeasures,
     setPlayEveryNMeasures,
+    countInMeasures,
+    setCountInMeasures,
+    isCountingIn,
     start,
     stop,
   };
