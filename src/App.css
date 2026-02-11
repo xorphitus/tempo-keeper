@@ -226,21 +226,6 @@ select:focus {
   gap: 0.5rem;
 }
 
-.n-measures-control input[type='number'] {
-  width: 100px;
-  padding: 0.75rem;
-  font-size: 1.2rem;
-  text-align: center;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.n-measures-control input[type='number']:focus {
-  outline: none;
-  border-color: #2196f3;
-}
-
 .help-text {
   font-size: 0.9rem;
   color: #666;

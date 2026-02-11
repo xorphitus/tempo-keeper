@@ -11,10 +11,10 @@ test.describe("count-in controls", () => {
     await page.goto("/");
   });
 
-  test("count-in input is present with default value 0", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await expect(countInInput).toBeVisible();
-    await expect(countInInput).toHaveValue("0");
+  test("count-in select is present with default value 0", async ({ page }) => {
+    const countInSelect = page.locator("#count-in");
+    await expect(countInSelect).toBeVisible();
+    await expect(countInSelect).toHaveValue("0");
   });
 
   test("shows 'No count-in' help text when value is 0", async ({ page }) => {
@@ -22,39 +22,23 @@ test.describe("count-in controls", () => {
   });
 
   test("updates help text when count-in value changes", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("2");
-    await countInInput.blur();
+    const countInSelect = page.locator("#count-in");
+    await countInSelect.selectOption("2");
     await expect(page.getByText("2 measures count-in before playing")).toBeVisible();
   });
 
   test("shows singular form for 1 measure count-in", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("1");
-    await countInInput.blur();
+    const countInSelect = page.locator("#count-in");
+    await countInSelect.selectOption("1");
     await expect(page.getByText("1 measure count-in before playing")).toBeVisible();
   });
 
-  test("clamps value to max 4", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("10");
-    await countInInput.blur();
-    await expect(countInInput).toHaveValue("4");
-  });
-
-  test("reverts negative input on blur", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("-1");
-    await countInInput.blur();
-    await expect(countInInput).toHaveValue("0");
-  });
-
-  test("count-in input is disabled while playing", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
+  test("count-in select is disabled while playing", async ({ page }) => {
+    const countInSelect = page.locator("#count-in");
     await page.getByRole("button", { name: "Start" }).click();
-    await expect(countInInput).toBeDisabled();
+    await expect(countInSelect).toBeDisabled();
     await page.getByRole("button", { name: "Stop" }).click();
-    await expect(countInInput).toBeEnabled();
+    await expect(countInSelect).toBeEnabled();
   });
 });
 
@@ -64,9 +48,8 @@ test.describe("count-in playback", () => {
   });
 
   test("shows Count-in label during count-in phase", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("2");
-    await countInInput.blur();
+    const countInSelect = page.locator("#count-in");
+    await countInSelect.selectOption("2");
 
     await page.getByRole("button", { name: "Start" }).click();
 
@@ -79,9 +62,8 @@ test.describe("count-in playback", () => {
 
   test("transitions from count-in to normal playback", async ({ page }) => {
     // Use 1 count-in measure at fast tempo to transition quickly
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("1");
-    await countInInput.blur();
+    const countInSelect = page.locator("#count-in");
+    await countInSelect.selectOption("1");
 
     // Set fast BPM for quicker transition
     const bpmInput = page.locator(".bpm-number");
@@ -97,9 +79,8 @@ test.describe("count-in playback", () => {
   });
 
   test("count-in beats have purple styling", async ({ page }) => {
-    const countInInput = page.locator("#count-in");
-    await countInInput.fill("2");
-    await countInInput.blur();
+    const countInSelect = page.locator("#count-in");
+    await countInSelect.selectOption("2");
 
     await page.getByRole("button", { name: "Start" }).click();
 
