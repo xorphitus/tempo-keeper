@@ -1,5 +1,8 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 
+const COUNT_IN_OPTIONS = [0, 1, 2, 3, 4] as const;
+const PLAY_EVERY_N_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 1);
+
 interface TimeSignature {
   label: string;
   value: number;
@@ -33,20 +36,10 @@ const MetronomeControls = ({
   onStop,
 }: MetronomeControlsProps) => {
   const [bpmDisplay, setBpmDisplay] = useState(String(bpm));
-  const [playEveryNDisplay, setPlayEveryNDisplay] = useState(String(playEveryNMeasures));
-  const [countInDisplay, setCountInDisplay] = useState(String(countInMeasures));
 
   useEffect(() => {
     setBpmDisplay(String(bpm));
   }, [bpm]);
-
-  useEffect(() => {
-    setPlayEveryNDisplay(String(playEveryNMeasures));
-  }, [playEveryNMeasures]);
-
-  useEffect(() => {
-    setCountInDisplay(String(countInMeasures));
-  }, [countInMeasures]);
 
   const commonTimeSignatures: TimeSignature[] = [
     { label: '4/4', value: 4 },
@@ -74,32 +67,6 @@ const MetronomeControls = ({
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
       setBpm(Math.max(40, Math.min(240, value)));
-    }
-  };
-
-  const handlePlayEveryNDisplayChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setPlayEveryNDisplay(e.target.value);
-  };
-
-  const handlePlayEveryNBlur = () => {
-    const value = parseInt(playEveryNDisplay, 10);
-    if (!isNaN(value) && value >= 1) {
-      setPlayEveryNMeasures(Math.min(16, value));
-    } else {
-      setPlayEveryNDisplay(String(playEveryNMeasures));
-    }
-  };
-
-  const handleCountInDisplayChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCountInDisplay(e.target.value);
-  };
-
-  const handleCountInBlur = () => {
-    const value = parseInt(countInDisplay, 10);
-    if (!isNaN(value) && value >= 0) {
-      setCountInMeasures(Math.min(4, value));
-    } else {
-      setCountInDisplay(String(countInMeasures));
     }
   };
 
@@ -151,16 +118,20 @@ const MetronomeControls = ({
       <div className="control-group">
         <label htmlFor="play-every-n">Play Every N Measures</label>
         <div className="n-measures-control">
-          <input
+          <select
             id="play-every-n"
-            type="number"
-            min="1"
-            max="16"
-            value={playEveryNDisplay}
-            onChange={handlePlayEveryNDisplayChange}
-            onBlur={handlePlayEveryNBlur}
+            value={playEveryNMeasures}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+              setPlayEveryNMeasures(parseInt(e.target.value, 10))
+            }
             disabled={isPlaying}
-          />
+          >
+            {PLAY_EVERY_N_OPTIONS.map(n => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
           <span className="help-text">
             {playEveryNMeasures === 1
               ? 'Playing every measure'
@@ -172,16 +143,20 @@ const MetronomeControls = ({
       <div className="control-group">
         <label htmlFor="count-in">Count-In Measures</label>
         <div className="n-measures-control">
-          <input
+          <select
             id="count-in"
-            type="number"
-            min="0"
-            max="4"
-            value={countInDisplay}
-            onChange={handleCountInDisplayChange}
-            onBlur={handleCountInBlur}
+            value={countInMeasures}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+              setCountInMeasures(parseInt(e.target.value, 10))
+            }
             disabled={isPlaying}
-          />
+          >
+            {COUNT_IN_OPTIONS.map(n => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
           <span className="help-text">
             {countInMeasures === 0
               ? 'No count-in'
