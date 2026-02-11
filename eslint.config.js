@@ -8,7 +8,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '.eslintrc.cjs', 'e2e/**', 'playwright.config.ts'],
+    ignores: ['dist/**', 'node_modules/**', '.eslintrc.cjs', 'e2e/**', 'playwright.config.ts', 'playwright-report/**'],
   },
   js.configs.recommended,
   {

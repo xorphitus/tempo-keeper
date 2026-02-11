@@ -6,7 +6,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npm run format"
+            "command": "pnpm run format"
+          },
+          {
+            "type": "command",
+            "command": "pnpm run lint --fix && pnpm exec tsc 2>&1 --noEmit"
           }
         ]
       }
