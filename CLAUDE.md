@@ -42,6 +42,26 @@ The application supports configurable time signatures, allowing practice with va
 
 This is a client-side only application, meaning all logic runs in the browser without server-side processing.
 
-## Development
+## Development Workflow
 
-The application is built with modern web technologies, focusing on precise timing control and audio playback for effective metronome functionality.
+Must follow these steps sequentially for any non-trivial implementation:
+
+### 1. Spec
+
+Use `spec-plugin:spec` subagent to clarify requirements and produce a specification before writing any code.
+
+### 2. Coding
+
+Use `typescript-plugin:typescript-coding` subagent to implement the feature following TDD Red-Green-Refactor cycle with strict type safety.
+
+### 3. Review & Testing
+
+Run all three of the following subagents to validate the implementation:
+
+- `typescript-plugin:typescript-code-review` — Review for readability, maintainability, and TypeScript idioms
+- `typescript-plugin:typescript-security` — Audit for vulnerabilities and insecure patterns
+- `typescript-plugin:typescript-testing` — Run tests, analyze coverage, and identify gaps
+
+### 4. E2E Verification
+
+Use `typescript-plugin:typescript-e2e` subagent to verify end-to-end behavior. If E2E tests fail, loop back to step 2 (Coding) to fix the implementation and repeat from there.
