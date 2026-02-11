@@ -52,16 +52,16 @@ Use `spec-plugin:spec` subagent to clarify requirements and produce a specificat
 
 ### 2. Coding
 
-Use `typescript-plugin:typescript-coding` subagent to implement the feature following TDD Red-Green-Refactor cycle with strict type safety.
+Use `typescript-plugin:coding` subagent to implement the feature following TDD Red-Green-Refactor cycle with strict type safety.
 
 ### 3. Review & Testing
 
 Run all three of the following subagents to validate the implementation:
 
-- `typescript-plugin:typescript-code-review` — Review for readability, maintainability, and TypeScript idioms
-- `typescript-plugin:typescript-security` — Audit for vulnerabilities and insecure patterns
-- `typescript-plugin:typescript-testing` — Run tests, analyze coverage, and identify gaps
+- `typescript-plugin:code-review` — Review for readability, maintainability, and TypeScript idioms
+- `typescript-plugin:testing` — Run tests, analyze coverage, and identify gaps
+- `typescript-plugin:security` — Audit for vulnerabilities and insecure patterns
 
 ### 4. E2E Verification
 
-Use `typescript-plugin:typescript-e2e` subagent to verify end-to-end behavior. If E2E tests fail, loop back to step 2 (Coding) to fix the implementation and repeat from there.
+Use `typescript-plugin:e2e` subagent to verify end-to-end behavior. If E2E tests fail, loop back to step 2 (Coding) to fix the implementation and repeat from there.
