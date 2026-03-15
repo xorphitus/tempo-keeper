@@ -17,6 +17,12 @@
           pnpm
           typescript-language-server
         ];
+        # For Claude Code sandbox
+        shellHook = ''
+          export NPM_CONFIG_PREFIX="$HOME/.npm-nix-global"
+          export PATH="$HOME/.npm-nix-global/bin:$PATH"
+          npm install -g @anthropic-ai/sandbox-runtime --silent
+        '';
       };
     };
 }
